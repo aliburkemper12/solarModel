@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ali Burkemper, CS435, Project #6</title>
+</head>
+<body>
+<div>
+    <label for="xSlider">X-Level:</label>
+    <input type="range" min="-50" max="50" value="15" step="1" id="xSlider">
+    <label for="ySlider">Y-Level:</label>
+    <input type="range" min="-50" max="50" value="0" step="1" id="ySlider">
+    <label for="zSlider">Z-Level:</label>
+    <input type="range" min="15" max="150" value="105" step="1" id="zSlider">
+</div>
+<div>
+    <button id="orbitBtn">Disable Paths</button>
+</div>
+
+<canvas id="gl-canvas" width="1500" height="800">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+    #version 300 es
+    
+    in vec4 aPosition;
+    in vec4 aColor;
+    in vec2 aTexCoord;
+    in vec4 aNormal;
+    
+    uniform mat4 uModelViewMatrix;
+    uniform mat4 uProjectionMatrix;
+    uniform mat4 uModelMatrix;
+    
+    out vec4 vColor;
+    out vec2 vTexCoord;
+    out vec3 vWorldPosition;
+    out vec3 vWorldNormal;
+    
+    void main()
+    {
+        // World space position and normal for lighting
+        vec4 worldPos = uModelMatrix * aPosition;
+        vWorldPosition = worldPos.xyz;
+        vWorldNormal = (uModelMatrix * aNormal).xyz;
+        
+        // Final position
+        gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
+        vColor = aColor;
+        vTexCoord = aTexCoord;
+    }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        #version 300 es
+        
+        precision mediump float;
+        
+        uniform sampler2D uTextureMap;
+        uniform bool uIsBackground;
+        uniform bool uIsSun;
+        uniform vec3 uLightPosition;
+        uniform bool uIsLine;
+        
+        in vec4 vColor;
+        in vec2 vTexCoord;
+        in vec3 vWorldPosition;
+        in vec3 vWorldNormal;
+        
+        out vec4 fragColor; 
+        
+        void main()
+        {
+            if (uIsBackground) {
+                fragColor = texture(uTextureMap, vTexCoord);
+            } else if (uIsSun) {
+                fragColor = texture(uTextureMap, vTexCoord);
+            } else if (uIsLine) {
+                fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            } else {
+                vec3 normal = normalize(vWorldNormal);
+                vec3 lightDir = normalize(uLightPosition - vWorldPosition);
+                
+                float diff = max(dot(normal, lightDir), 0.0);
+                
+                vec3 ambient = vec3(0.3, 0.3, 0.3);
+                vec3 diffuse = vec3(2.0, 1.8, 1.6) * diff;
+                
+                vec3 lighting = ambient + diffuse;
+                
+                vec3 texColor = texture(uTextureMap, vTexCoord).rgb;
+                fragColor = vec4(texColor * lighting, 1.0);
+            }
+        }
+        </script>
+
+<img id="starfield" src="images/skyfield.png" hidden></img>
+<img id="mercury" src="images/mercury_texture.jpg" hidden></img>
+<img id="venus" src="images/venus_texture.jpeg" hidden></img>
+<img id="earth" src="images/earth_texture.jpg" hidden></img>
+<img id="mars" src="images/mars_texture.jpg" hidden></img>
+<img id="jupiter" src="images/jupiter_texture.jpg" hidden></img>
+<img id="saturn" src="images/saturn_texture.jpg" hidden></img>
+<img id="neptune" src="images/neptune_texture.jpg" hidden></img>
+<img id="uranus" src="images/uranus_texture.jpg" hidden></img>
+<img id="sun" src="images/sun_texture.jpg" hidden></img>
+<img id="ring" src="images/saturnring_texture.jpg" hidden></img>
+
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MVnew.js"></script>
+<script type="text/javascript" src="proj7.js"></script>
+
+</body>
+</html>
