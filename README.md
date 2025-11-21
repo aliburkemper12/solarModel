@@ -22,6 +22,13 @@ The project investigates graphics concepts by:
 - **Transformations & Matrix Operations** Modeling Transformations, view transformations, Model-View matrix composition
 - **WebGL Pipeline** Vertex and fragment shader, buffer management, attribute and uniform variable handling
 
+---
+
+## 🖼️ Images
+
+<div align="center">
+  <img src="images/preview.png" alt="Solar System Screenshot" width="600"/>
+</div>
 
 ---
 
