@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ali Burkemper, CS435, Project #6</title>
+    <title>Ali Burkemper, CS435, Project #7</title>
 </head>
 <body>
 <div>
@@ -14,6 +14,22 @@
 </div>
 <div>
     <button id="orbitBtn">Disable Paths</button>
+</div>
+<div>
+    <h1>Follow Planet:</h1>
+    <select name="viewSelect" id="viewSelect">
+        <option value="none" selected>None</option>
+        <option value="mercury">Mercury</option>
+        <option value="venus">Venus</option>
+        <option value="earth">Earth</option>
+        <option value="mars">Mars</option>
+        <option value="jupiter">Jupiter</option>
+        <option value="saturn">Saturn</option>
+        <option value="uranus">Uranus</option>
+        <option value="neptune">Neptune</option>
+    </select>
+    <h3>Directions</h3>
+    <p>Use the sliders to adjust camera position within the solar system. To have the camera follow a planet, use the drop down. To stop following, set the dropdown to 'none'. To enable/disable orbit lines, use the button. Note: Not to scale</p>
 </div>
 
 <canvas id="gl-canvas" width="1500" height="800">

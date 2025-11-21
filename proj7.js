@@ -3,6 +3,9 @@
 // Ali Burkemper, CS435, Project 7
 
 // Final project, interactive solar system
+// planets orbiting the sun with textures
+// ability to change camera positoin
+// ability to follow a planet
 
 
 var canvas;
@@ -62,6 +65,12 @@ var uNormalMatrixLoc;
 var uIsSunLoc;
 var uModelMatrixLoc;
 var uIsLineLoc;
+
+// viewing a planet
+var viewPlanet = null; 
+var viewDistance = -5.0;
+var viewHeight = 2.0;
+var offset = -3.0; // x direction
 
 
 var texCoord = [
@@ -162,7 +171,6 @@ function configureTexture( image , textureUnit) {
 }
 
 //create ring geometry
-// Add this function with your other geometry functions
 function createRing(innerRadius, outerRadius, segments) {
     var ringPositions = [];
     var ringColors = [];
@@ -196,13 +204,12 @@ function createRing(innerRadius, outerRadius, segments) {
         ringPositions.push(vec4(x1Outer, 0, z1Outer, 1.0));
         ringPositions.push(vec4(x2Outer, 0, z2Outer, 1.0));
         
-        // Normals (pointing up)
+        // Normals
         for (var j = 0; j < 6; j++) {
             ringNormals.push(vec4(0, 1, 0, 0));
             ringColors.push(vec4(1, 1, 1, 1));
         }
         
-        // Texture coordinates
         var u1 = i / segments;
         var u2 = (i + 1) / segments;
         ringTexCoords.push(vec2(u1, 0));
@@ -227,13 +234,14 @@ function drawPlanet(x, y, z, scale, rotationY, isSun, isUranus) {
     var modelMatrix = mat4();
     modelMatrix = mult(modelMatrix, translate(x, y, z));
 
+    // uranus spins on its side, apply tilt matrix
     if (isUranus) {
         var tiltMatrix = rotate(98, vec3(0, 0, 1));
         modelMatrix = mult(modelMatrix, tiltMatrix);
 
         var rotationMatrix = rotate(rotationY, vec3(0, 1, 0));
         modelMatrix = mult(modelMatrix, rotationMatrix);
-    }
+    } // regular spin/tilt
     else {
         var rotationMatrix = rotate(rotationY, vec3(0, 1, 0));
         modelMatrix = mult(modelMatrix, rotationMatrix);
@@ -258,7 +266,7 @@ function drawPlanet(x, y, z, scale, rotationY, isSun, isUranus) {
     gl.drawArrays(gl.TRIANGLES, 0, numVertices);
 }
 
-// draw rings helper
+// draw rings helper (saturn)
 function drawRing(x, y, z, scale, rotationY) {
     var modelMatrix = mat4();
     modelMatrix = mult(modelMatrix, translate(x, y, z));
@@ -266,6 +274,7 @@ function drawRing(x, y, z, scale, rotationY) {
     // var rotationMatrix = rotate(rotationY, vec3(0, 1, 0));
     // modelMatrix = mult(modelMatrix, rotationMatrix);
     
+    // saturns rings are tilted
     var tiltMatrix = rotate(27, vec3(1, 0, 0));
     modelMatrix = mult(modelMatrix, tiltMatrix);
 
@@ -313,7 +322,7 @@ function drawRing(x, y, z, scale, rotationY) {
     gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 0, 0);
 }
 
-// create planet orbits geometry
+// create planet orbits (lines) geometry
 function createPath(radius, segments) {
     var orbitVertices = [];
     
@@ -449,7 +458,7 @@ window.onload = function init() {
     gl.enableVertexAttribArray(normalLoc);
 
     // planet orbits
-    var orbitRadii = [13.9, 17.2, 20.0, 25.2, 32.0, 45.4, 62.0, 80.0]; // Mercury through Neptune
+    var orbitRadii = [13.9, 17.2, 20.0, 25.2, 32.0, 45.4, 62.0, 80.0]; // orbit radius from sun for each planet
 
     orbitRadii.forEach(function(radius) {
         var orbit = createPath(radius, 100);
@@ -505,6 +514,7 @@ window.onload = function init() {
     gl.uniform1i(gl.getUniformLocation(program, "uTextureMap"), 0);
 
 
+    // HTML CONTROLS
     // y-level camera slider
     const ySlider = document.getElementById("ySlider");
     ySlider.addEventListener("input", function() {
@@ -540,12 +550,77 @@ window.onload = function init() {
         }
     });
 
+    // viewing planet
+    const planetSelect = document.getElementById("viewSelect");
+    planetSelect.addEventListener("change", function() {
+        const selectedPlanet = this.value;
+        if (selectedPlanet === "none") {
+            viewPlanet = null;
+            eye = vec3(0.0, 15.0, 105.0);
+            // enable the sliders
+            xSlider.disabled = false;
+            ySlider.disabled = false;
+            zSlider.disabled = false;
+        } else {
+            viewPlanet = selectedPlanet;
+            // disable the sliders
+            xSlider.disabled = true;
+            ySlider.disabled = true;
+            zSlider.disabled = true;
+        }
+    });
 
 
-    var interval = null;
 
 
     render();
+}
+
+
+// planet positions for view following
+function getPlanetPosition (planet, time) {
+    // change camera params for each planet
+    switch(planet) {
+        case "mercury":{
+            viewDistance = -2.0;
+            viewHeight = 1.0;
+            return vec3(13.9 * Math.cos(time * 2.8), 0.0, 13.9 * Math.sin(time * 2.8));
+        };
+        case "venus":
+            viewDistance = -2.0;
+            viewHeight = 1.0;
+            offset = -2.0;
+            return vec3(17.2 * Math.cos(time * 1.15), 0.0, 17.2 * Math.sin(time * 1.15));
+        case "earth":
+            viewDistance = -2.0;
+            viewHeight = 1.0;
+            offset = -4.0;
+            return vec3(20.0 * Math.cos(time * 0.7), 0.0, 20.0 * Math.sin(time * 0.7));
+        case "mars":
+            return vec3(25.2 * Math.cos(time * .4), 0.0, 25.2 * Math.sin(time * .4));
+        case "jupiter":
+            viewDistance = -6.0;
+            viewHeight = 5.0;
+            offset = -15.0;
+            return vec3(32.0 * Math.cos(time * 0.06), 0.0, 32.0 * Math.sin(time * 0.06));
+        case "saturn":
+            viewDistance = -6.0;
+            viewHeight = 5.0;
+            offset = -18.0;
+            return vec3(45.4 * Math.cos(time * 0.03), 0.0, 45.4 * Math.sin(time * 0.03));
+        case "uranus":
+            viewDistance = -6.0;
+            viewHeight = 5.0;
+            offset = -12.0;
+            return vec3(62.0 * Math.cos(time * 0.008), 0.0, 62.0 * Math.sin(time * 0.008));
+        case "neptune":
+            viewDistance = -6.0;
+            viewHeight = 5.0;
+            offset = -12.0;
+            return vec3(80.0 * Math.cos(time * 0.004), 0.0, 80.0 * Math.sin(time * 0.004));
+        default:
+            return vec3(0.0, 15.0, 105.0);
+    }
 }
 
 
@@ -556,6 +631,23 @@ var render = function() {
 
     let time = performance.now() / 1000;
 
+    // calculations for planet following (if enabled)
+    if (viewPlanet !== null) {
+        var planetPos = getPlanetPosition(viewPlanet, time);
+        console.log("planet at position: ", planetPos);
+        
+        var angle = Math.atan2(planetPos[2], planetPos[0]);
+        
+        // position the camera behind the planet
+        eye = vec3(
+            planetPos[0] - viewDistance * Math.cos(angle) + offset * Math.cos(angle + Math.PI/2),
+            planetPos[1] + viewHeight,
+            planetPos[2] - viewDistance * Math.sin(angle) + offset * Math.sin(angle + Math.PI/2)
+        );
+        console.log("eye position: ", eye);
+    }
+
+
     // camera
     // update modelView matrix based on eye position
     modelViewMatrix = lookAt(eye, vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
@@ -565,8 +657,9 @@ var render = function() {
     // Set sun position as light source
     gl.uniform3fv(uLightPositionLoc, flatten(vec3(0.0, 0.0, 0.0)));
 
-    // draw starfield - environment
+    // draw starfield environment
     gl.depthMask(false);
+    gl.uniform1i(uIsBackgroundLoc, 1);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, starfieldTex);
     gl.uniform1i(gl.getUniformLocation(program, "uTextureMap"), 0);
@@ -640,7 +733,6 @@ var render = function() {
     gl.bindTexture(gl.TEXTURE_2D, saturnTex);
     gl.uniform1i(gl.getUniformLocation(program, "uTextureMap"), 0);
     drawPlanet(saturnX, 0.0, saturnZ, 3.7, time * 60, false, false);
-
     // draw saturn's rings
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, saturnRingTex);
